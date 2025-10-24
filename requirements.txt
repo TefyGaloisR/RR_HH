@@ -5,3 +5,4 @@ joblib
 catboost
 plotly.express
 gunicorn
+scikit-learn
