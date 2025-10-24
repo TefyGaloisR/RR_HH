@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: app-rrhh
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app_RH:server
