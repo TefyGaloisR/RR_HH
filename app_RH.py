@@ -6,8 +6,12 @@ import joblib
 import plotly.express as px
 import warnings
 warnings.filterwarnings('ignore')
-#from google.colab import drive
-#drive.mount('/content/drive')
+
+# === Usuarios y contraseñas para login ===
+USUARIOS = {
+    "rrhh": "1234",
+    "admin": "abcd"
+}
 
 # === Cargar modelo ===
 model_pipeline = joblib.load("Rotacion_V2.pkl")
@@ -17,84 +21,94 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 app.title = 'Predicción de Rotación'
 server = app.server
 
-# === Layout principal: todas las pestañas pre-renderizadas ===
-app.layout = dbc.Container([
-    html.H2("Predicción de Rotación", className="text-center mt-4 mb-4"),
+# === Layout principal con login ===
+app.layout = html.Div([
+    # Login
+    html.Div(id="login-div", children=[
+        html.H3("Login RRHH"),
+        dcc.Input(id="username", type="text", placeholder="Usuario", style={'marginRight':'10px'}),
+        dcc.Input(id="password", type="password", placeholder="Contraseña", style={'marginRight':'10px'}),
+        dbc.Button("Entrar", id="login-button", n_clicks=0, color="primary"),
+        html.Div(id="login-output", style={"color":"red", "marginTop":10})
+    ], style={"textAlign":"center", "marginTop":"50px"}),
 
-    dcc.Tabs(id="tabs", value='tab1', children=[
-        dcc.Tab(label='Datos personales', value='tab1'),
-        dcc.Tab(label='Datos laborales', value='tab2'),
-        dcc.Tab(label='Resultado', value='tab3')
-    ]),
+    # Contenido de la app (oculto hasta login correcto)
+    html.Div(id="app-content", style={"display":"none"}, children=[
+        dbc.Container([
+            html.H2("Predicción de Rotación", className="text-center mt-4 mb-4"),
+            dcc.Tabs(id="tabs", value='tab1', children=[
+                dcc.Tab(label='Datos personales', value='tab1'),
+                dcc.Tab(label='Datos laborales', value='tab2'),
+                dcc.Tab(label='Resultado', value='tab3')
+            ]),
 
-    html.Div([
+            html.Div([
+                # Pestaña 1
+                html.Div(id='tab1-content', children=[
+                    html.H5("Datos personales", className="mb-3 text-primary fw-bold"),
+                    dbc.Row([dbc.Col(html.Label("Género:")), dbc.Col(dcc.RadioItems(['Masculino', 'Femenino'], value='Masculino', id='genero'))], className="mb-2"),
+                    dbc.Row([dbc.Col(html.Label("Estado civil:")), dbc.Col(dcc.RadioItems(['Soltero', 'Casado', 'Union_Libre', 'Divorcio','Separado','Viudo'], value='Soltero', id='civil'))], className="mb-2"),
+                    dbc.Row([dbc.Col(html.Label("Número de hijos:")), dbc.Col(dcc.Input(id='hijos', type='number', value=0, min=0, max=6, step=1, style={'width':'100%'}))], className="mb-2"),
+                ]),
 
-        # Pestaña 1: Datos personales
-        html.Div(id='tab1-content', children=[
-            html.H5("Datos personales", className="mb-3 text-primary fw-bold"),
-            dbc.Row([dbc.Col(html.Label("Género:")), dbc.Col(dcc.RadioItems(['Masculino', 'Femenino'], value='Masculino', id='genero'))], className="mb-2"),
-            dbc.Row([dbc.Col(html.Label("Estado civil:")), dbc.Col(dcc.RadioItems(['Soltero', 'Casado', 'Union_Libre', 'Divorcio','Separado','Viudo'], value='Soltero', id='civil'))], className="mb-2"),
-            dbc.Row([dbc.Col(html.Label("Número de hijos:")), dbc.Col(dcc.Input(id='hijos', type='number', value=0, min=0, max=6, step=1, style={'width':'100%'}))], className="mb-2"),
-        ]),
+                # Pestaña 2
+                html.Div(id='tab2-content', children=[
+                    html.H5("Datos laborales", className="mb-3 text-primary fw-bold"),
+                    dbc.Row([dbc.Col(html.Label("Ingreso mensual (Income):")), dbc.Col(dcc.Input(id='salario', type='number', value=9500, min=0, max=60000, step=50, style={'width':'100%'}))], className="mb-2"),
+                    dbc.Row([dbc.Col(html.Label("Distancia (km):")), dbc.Col(dcc.Input(id='dis', type='number', value=2, min=0, max=30, step=0.1, style={'width':'100%'}))], className="mb-2"),
+                    dbc.Row([dbc.Col(html.Label("Reingreso:")), dbc.Col(dcc.RadioItems(['No', 'Sí'], value='No', id='reing'))], className="mb-2"),
+                    dbc.Row([dbc.Col(html.Label("Generación:")), dbc.Col(dcc.RadioItems(['Millenials', 'Generation X', 'Boomers', 'Silent'], value='Millenials', id='generation'))], className="mb-2"),
+                    dbc.Row([dbc.Col(html.Label("Puesto:")), dbc.Col(dcc.Dropdown([
+                        'asistente de servicio','cajero (a)', 'valet parking','imagen','mac',
+                        'analista de reclutamiento y seleccion','mesero','inspector de riesgos','barman','dealer',
+                        'jefe de a y b','supervisor de boveda','jardinero','lavaloza','cocinero','portero',
+                        'jefe de contraloria','table game host','hrbp operativo','tecnico de sistemas sala',
+                        'ejecutivo de clientes','supervisor de mesas','lider de servicio','supervisor (a) de cajas','pit boss',
+                        'ayudante de cocina','tecnico de mantenimiento','cajero fill bank','host ejecutivo','capitan de meseros',
+                        'contralor jr','barista','almacenista','coordinador de imagen','coordinador de turno cocina','asesor sportbar',
+                        'coordinador de valet parking','supervisor de porteros','enlace sindical','jefe de boveda y caja',
+                        'especialista de capacitacion','supervisor sportbar','chef','jefe de porteros sala','auxiliar de capacitacion',
+                        'coordinador de mercadotecnia','sous chef','jefe de sistemas sala','especialista de recl y seleccion',
+                        'supervisor de almacen','lider de a y b','especialista de servicio a colaboradores','jefe de maquinas operativo',
+                        'chofer','jefe de mantenimiento','asistente de entretenimiento','lider de administracion de cajas',
+                        'chofer fashion','jefe de mesas','supervisor de sistemas','anfitrion','coordinador de panaderia',
+                        'coordinador de cafeteria','jefe de sala','lider de almacen','supervisor de vvun','panadero','runner'
+                    ], value='asistente de servicio', id='puesto'))], className="mb-2"),
+                    dbc.Row([dbc.Col(html.Label("Sala:")), dbc.Col(dcc.Dropdown([
+                        'JUBILEE','JUBILEECANCUN','VIVENTOAPODACA','HOLLYWOODVALLEALTO','JUBILEECDMX','GOLDENISLAND',
+                        'PARADISE','VIVAMEXICO','VIVENTOZAPOPAN','NEWYORK','GRANDLEON','TAJMAHAL','HOLLYWOODCONSTITUCION',
+                        'VIVENTOCULIACAN','ELDORADO'
+                    ], value='JUBILEE', id='sala'))], className="mb-2"),
+                    dbc.Button('Calcular', id='submit-val', color='primary', className='mt-2')
+                ]),
 
-        # Pestaña 2: Datos laborales
-        html.Div(id='tab2-content', children=[
-            html.H5("Datos laborales", className="mb-3 text-primary fw-bold"),
-            #dbc.Row([dbc.Col(html.Label("Horario:")), dbc.Col(dcc.RadioItems(['6:00AM-6:00PM','12:00PM-12:00AM','6:00PM-6:00AM','9:00AM-7:00PM','2:00PM-2:00AM','Variado'], value='6:00AM-6:00PM', id='horario'))], className="mb-2"),
-            dbc.Row([dbc.Col(html.Label("Ingreso mensual (Income):")), dbc.Col(dcc.Input(id='salario', type='number', value=9500, min=0, max=60000, step=50, style={'width':'100%'}))], className="mb-2"),
-            dbc.Row([dbc.Col(html.Label("Distancia (km):")), dbc.Col(dcc.Input(id='dis', type='number', value=2, min=0, max=30, step=0.1, style={'width':'100%'}))], className="mb-2"),
-            dbc.Row([dbc.Col(html.Label("Reingreso:")), dbc.Col(dcc.RadioItems(['No', 'Sí'], value='No', id='reing'))], className="mb-2"),
-            dbc.Row([dbc.Col(html.Label("Generación:")), dbc.Col(dcc.RadioItems(['Millenials', 'Generation X', 'Boomers', 'Silent'], value='Millenials', id='generation'))], className="mb-2"),
-            dbc.Row([dbc.Col(html.Label("Puesto:")), dbc.Col(dcc.Dropdown([
-                'asistente de servicio','cajero (a)', 'valet parking', 'imagen', 'mac',
-                'analista de reclutamiento y seleccion',
-                'mesero', 'inspector de riesgos', 'barman', 'dealer',
-                'jefe de a y b', 'supervisor de boveda', 'jardinero', 'lavaloza',
-                'cocinero', 'portero', 'jefe de contraloria', 'table game host',
-                'hrbp operativo', 'tecnico de sistemas sala',
-                'ejecutivo de clientes', 'supervisor de mesas',
-                'lider de servicio', 'supervisor (a) de cajas', 'pit boss',
-                'ayudante de cocina', 'tecnico de mantenimiento',
-                'cajero fill bank', 'host ejecutivo', 'capitan de meseros',
-                'contralor jr', 'barista', 'almacenista', 'coordinador de imagen',
-                'coordinador de turno cocina', 'asesor sportbar',
-                'coordinador de valet parking', 'supervisor de porteros',
-                'enlace sindical', 'jefe de boveda y caja',
-                'especialista de capacitacion', 'supervisor sportbar', 'chef',
-                'jefe de porteros sala', 'auxiliar de capacitacion',
-                'coordinador de mercadotecnia', 'sous chef',
-                'jefe de sistemas sala', 'especialista de recl y seleccion',
-                'supervisor de almacen', 'lider de a y b',
-                'especialista de servicio a colaboradores',
-                'jefe de maquinas operativo', 'chofer', 'jefe de mantenimiento',
-                'asistente de entretenimiento', 'lider de administracion de cajas',
-                'chofer fashion', 'jefe de mesas', 'supervisor de sistemas',
-                'anfitrion', 'coordinador de panaderia',
-                'coordinador de cafeteria', 'jefe de sala', 'lider de almacen',
-                'supervisor de vvun', 'panadero', 'runner'
-            ], value='asistente de servicio', id='puesto'))], className="mb-2"),
-            dbc.Row([dbc.Col(html.Label("Sala:")), dbc.Col(dcc.Dropdown([
-                'JUBILEE','JUBILEECANCUN','VIVENTOAPODACA','HOLLYWOODVALLEALTO','JUBILEECDMX','GOLDENISLAND',
-                'PARADISE','VIVAMEXICO','VIVENTOZAPOPAN','NEWYORK','GRANDLEON','TAJMAHAL','HOLLYWOODCONSTITUCION',
-                'VIVENTOCULIACAN','ELDORADO'
-            ], value='JUBILEE', id='sala'))], className="mb-2"),
-            #dbc.Row([dbc.Col(html.Label("Tiempo en meses:")), dbc.Col(dcc.Dropdown([
-            #    'Mas_año','Menos_Mes','1_Mes','2_Meses','3_Meses','4_Meses','5_Meses','6_Meses',
-            #    '7_Meses','8_Meses','9_Meses','10_Meses','11_Meses','12_Meses'
-            #], value='Mas_año', id='meses'))], className="mb-3"),
-            dbc.Button('Calcular', id='submit-val', color='primary', className='mt-2')
-        ]),
-
-        # Pestaña 3: Resultado
-        html.Div(id='tab3-content', children=[
-            html.H5("Resultado de la predicción", className="mb-3 text-primary fw-bold"),
-            html.Div(id='prediction-output', className="fs-5 fw-bold text-success")
-        ])
+                # Pestaña 3: Resultado
+                html.Div(id='tab3-content', children=[
+                    html.H5("Resultado de la predicción", className="mb-3 text-primary fw-bold"),
+                    html.Div(id='prediction-output', className="fs-5 fw-bold text-success")
+                ])
+            ])
+        ], fluid=True)
     ])
-], fluid=True)
+])
 
-# === Callback para mostrar solo la pestaña activa ===
+# === Callback login ===
+@app.callback(
+    Output("login-output", "children"),
+    Output("app-content", "style"),
+    Input("login-button", "n_clicks"),
+    State("username", "value"),
+    State("password", "value")
+)
+def check_login(n, username, password):
+    if n > 0:
+        if username in USUARIOS and USUARIOS[username] == password:
+            return "", {"display":"block"}
+        else:
+            return "Usuario o contraseña incorrecta", {"display":"none"}
+    return "", {"display":"none"}
 
+# === Callback mostrar solo la pestaña activa ===
 @app.callback(
     Output('tab1-content', 'style'),
     Output('tab2-content', 'style'),
@@ -112,7 +126,6 @@ def display_tab(tab):
 @app.callback(
     Output('prediction-output', 'children'),
     Input('submit-val', 'n_clicks'),
-    #State('horario', 'value'),
     State('civil', 'value'),
     State('genero', 'value'),
     State('puesto', 'value'),
@@ -121,21 +134,15 @@ def display_tab(tab):
     State('dis', 'value'),
     State('reing', 'value'),
     State('generation', 'value'),
-    #State('meses', 'value'),
     State('hijos', 'value')
 )
 def update_output(n, civil, genero, puesto, salario, sala, dis, reing, generation, hijos):
     if not n:
         return ""
-
     tiempo_meses_val = "Mas_año"
-    Horas = [
-        '6:00AM-6:00PM', '12:00PM-12:00AM', '6:00PM-6:00AM',
-        '9:00AM-7:00PM', '2:00PM-2:00AM'
-    ]
+    Horas = ['6:00AM-6:00PM', '12:00PM-12:00AM', '6:00PM-6:00AM', '9:00AM-7:00PM', '2:00PM-2:00AM']
     reing_num = 1 if reing == 'Sí' else 0
 
-    # Calcular predicciones
     resultados = []
     for horario in Horas:
         x = pd.DataFrame({
@@ -156,7 +163,6 @@ def update_output(n, civil, genero, puesto, salario, sala, dis, reing, generatio
 
     df = pd.DataFrame(resultados).sort_values("Probabilidad (%)", ascending=False)
 
-    # Gráfica con degradado tipo semáforo y hover info
     fig = px.bar(
         df,
         x="Probabilidad (%)",
@@ -164,10 +170,9 @@ def update_output(n, civil, genero, puesto, salario, sala, dis, reing, generatio
         orientation="h",
         text="Probabilidad (%)",
         color="Probabilidad (%)",
-        color_continuous_scale=px.colors.diverging.RdYlGn[::-1],  # rojo=alto riesgo, verde=bajo
+        color_continuous_scale=px.colors.diverging.RdYlGn[::-1],
         range_color=[0, 100],
         hover_data=["Horario", "Probabilidad (%)"],
-        #hover_data=['Probabilidad','Genero','Estado_Civil','Puesto','Income','Sala','Distancia','Reingreso','Generation','Child'],
         title="Probabilidad de renuncia por horario"
     )
 
@@ -180,15 +185,11 @@ def update_output(n, civil, genero, puesto, salario, sala, dis, reing, generatio
         margin=dict(l=80, r=40, t=60, b=40)
     )
 
-    # Resumen textual
     resumen = [
         html.H6("Resultados detallados:", className="mt-3 text-primary"),
-        html.Ul([
-            html.Li(f"{row['Horario']}: {row['Probabilidad (%)']}%") for _, row in df.iterrows()
-        ])
+        html.Ul([html.Li(f"{row['Horario']}: {row['Probabilidad (%)']}%") for _, row in df.iterrows()])
     ]
 
-    # Tarjeta combinada
     return html.Div([
         dbc.Card(
             dbc.CardBody([
@@ -198,10 +199,8 @@ def update_output(n, civil, genero, puesto, salario, sala, dis, reing, generatio
             className="shadow-sm mt-3"
         )
     ])
-
-
-
 # === Ejecutar ===
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8050))  # toma el puerto de Render o usa 8050 si es local
     app.run(host='0.0.0.0', port=port)
+
