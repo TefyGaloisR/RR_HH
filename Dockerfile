@@ -17,4 +17,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 5. El Comando de Ejecución: Esto es lo que se ejecuta cuando el contenedor arranca.
 # ¡IMPORTANTE! No usamos el servidor de desarrollo de Dash. Usamos un servidor de producción como Gunicorn.
 # Cloud Run espera que la aplicación escuche en el puerto 8080.
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "app:server"]
+
+CMD ["gunicorn", "-b", "0.0.0.0:8080", "app_RH:server"]
