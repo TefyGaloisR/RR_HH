@@ -18,7 +18,7 @@ model_pipeline = joblib.load("Rotacion_V2.pkl")
 
 # === Crear app ===
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.title = 'Predicción de Rotación'
+app.title = 'Predicción de Rotación!!'
 server = app.server
 
 # === Layout principal con login ===
@@ -203,4 +203,5 @@ def update_output(n, civil, genero, puesto, salario, sala, dis, reing, generatio
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8050))  # toma el puerto de Render o usa 8050 si es local
     app.run(host='0.0.0.0', port=port)
+
 
