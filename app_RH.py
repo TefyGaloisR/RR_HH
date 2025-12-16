@@ -18,7 +18,7 @@ model_pipeline = joblib.load("Rotacion_V2.pkl")
 
 # === Crear app ===
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-app.title = 'Predicción de Rotación!!'
+app.title = 'Predicción de Rotación'
 server = app.server
 
 # === Layout principal con login ===
@@ -35,7 +35,7 @@ app.layout = html.Div([
     # Contenido de la app (oculto hasta login correcto)
     html.Div(id="app-content", style={"display":"none"}, children=[
         dbc.Container([
-            html.H2("Predicción de Rotación", className="text-center mt-4 mb-4"),
+            html.H2("Predicción de Rotación!!!!", className="text-center mt-4 mb-4"),
             dcc.Tabs(id="tabs", value='tab1', children=[
                 dcc.Tab(label='Datos personales', value='tab1'),
                 dcc.Tab(label='Datos laborales', value='tab2'),
@@ -203,5 +203,6 @@ def update_output(n, civil, genero, puesto, salario, sala, dis, reing, generatio
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 8050))  # toma el puerto de Render o usa 8050 si es local
     app.run(host='0.0.0.0', port=port)
+
 
 
